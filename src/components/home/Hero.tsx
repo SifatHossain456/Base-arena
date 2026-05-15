@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Zap, TrendingUp, TrendingDown, Shield } from 'lucide-react';
-import { useAccount } from 'wagmi';
+import { useAssetPrices } from '@/hooks/useAssetPrices';
 
 function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -84,25 +84,7 @@ function ParticleCanvas() {
 }
 
 function LivePriceTicker() {
-  const [prices, setPrices] = useState([
-    { symbol: 'ETH', price: 3842.15, change: 2.4, up: true },
-    { symbol: 'BTC', price: 98450.20, change: 1.8, up: true },
-    { symbol: 'cbBTC', price: 98380.50, change: 1.75, up: true },
-  ]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPrices((prev) =>
-        prev.map((p) => ({
-          ...p,
-          price: p.price * (1 + (Math.random() - 0.5) * 0.002),
-          change: p.change + (Math.random() - 0.5) * 0.1,
-          up: Math.random() > 0.4,
-        }))
-      );
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
+  const prices = useAssetPrices(30000);
 
   return (
     <motion.div
@@ -111,20 +93,33 @@ function LivePriceTicker() {
       transition={{ delay: 0.8 }}
       className="flex flex-wrap items-center justify-center gap-4 mt-8"
     >
-      {prices.map((p) => (
-        <div key={p.symbol} className="glass rounded-2xl px-4 py-3 flex items-center gap-3 min-w-[160px]">
-          <div>
-            <p className="text-xs text-gray-400">{p.symbol}/USD</p>
-            <p className="text-sm font-bold font-mono">
-              ${p.symbol === 'ETH' ? p.price.toFixed(2) : p.price.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-            </p>
+      {prices.map((p) => {
+        const up = (p.change24h ?? 0) >= 0;
+        return (
+          <div key={p.symbol} className="glass rounded-2xl px-4 py-3 flex items-center gap-3 min-w-[160px]">
+            <div>
+              <p className="text-xs text-gray-400">{p.symbol}/USD</p>
+              {p.loading ? (
+                <div className="h-4 w-20 bg-white/10 rounded animate-pulse mt-1" />
+              ) : p.price === null ? (
+                <p className="text-sm font-bold text-gray-500">—</p>
+              ) : (
+                <p className="text-sm font-bold font-mono">
+                  ${p.symbol === 'ETH'
+                    ? p.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : p.price.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                </p>
+              )}
+            </div>
+            {!p.loading && p.change24h !== null && (
+              <div className={`flex items-center gap-1 ${up ? 'text-green-400' : 'text-red-400'}`}>
+                {up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                <span className="text-xs font-medium">{Math.abs(p.change24h).toFixed(2)}%</span>
+              </div>
+            )}
           </div>
-          <div className={`flex items-center gap-1 ${p.up ? 'text-green-400' : 'text-red-400'}`}>
-            {p.up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-            <span className="text-xs font-medium">{Math.abs(p.change).toFixed(2)}%</span>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </motion.div>
   );
 }
@@ -136,19 +131,15 @@ const badges = [
 ];
 
 export function Hero() {
-  const { isConnected } = useAccount();
-
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       <ParticleCanvas />
 
-      {/* Background glows */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
-        {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -158,11 +149,8 @@ export function Hero() {
           <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
           <span className="text-gray-300">Live on </span>
           <span className="text-gradient-blue font-semibold">Base Mainnet</span>
-          <span className="text-gray-400">·</span>
-          <span className="text-gray-300">$2.4M+ Prize Pool Distributed</span>
         </motion.div>
 
-        {/* Headline */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -177,7 +165,6 @@ export function Hero() {
           <span className="text-gradient-purple">Base.</span>
         </motion.h1>
 
-        {/* Subtitle */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -188,7 +175,6 @@ export function Hero() {
           predict crypto prices, earn ETH rewards and exclusive NFT trophies — all on Base mainnet.
         </motion.p>
 
-        {/* Trust badges */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -206,7 +192,6 @@ export function Hero() {
           })}
         </motion.div>
 
-        {/* CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -228,11 +213,10 @@ export function Hero() {
           </Link>
         </motion.div>
 
-        {/* Live prices */}
+        {/* Real-time prices from CoinGecko */}
         <LivePriceTicker />
       </div>
 
-      {/* Scroll indicator */}
       <motion.div
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
         animate={{ y: [0, 8, 0] }}

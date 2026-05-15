@@ -5,9 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi';
-import { coinbaseWallet, injected } from 'wagmi/connectors';
-import { Menu, X, Zap, Trophy, BarChart3, User, PlusCircle, ChevronDown, Wallet, LogOut, Copy, ExternalLink } from 'lucide-react';
-import { cn, shortenAddress, formatETH } from '@/lib/utils';
+import { Menu, X, Zap, Trophy, User, PlusCircle, ChevronDown, Wallet, LogOut, Copy, ExternalLink, AlertCircle } from 'lucide-react';
+import { cn, shortenAddress } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 const navLinks = [
@@ -16,6 +15,13 @@ const navLinks = [
   { href: '/create', label: 'Create', icon: PlusCircle },
   { href: '/profile', label: 'Profile', icon: User },
 ];
+
+const CONNECTOR_META: Record<string, { icon: string; description: string }> = {
+  'Coinbase Wallet': { icon: '🔵', description: 'Gasless & instant — powered by Coinbase' },
+  'MetaMask':        { icon: '🦊', description: 'Browser extension wallet' },
+  'WalletConnect':   { icon: '🔗', description: 'Scan with any mobile wallet' },
+  'injected':        { icon: '🌐', description: 'Browser wallet (detected)' },
+};
 
 function WalletDropdown({ address, onDisconnect }: { address: string; onDisconnect: () => void }) {
   const [open, setOpen] = useState(false);
@@ -63,8 +69,8 @@ function WalletDropdown({ address, onDisconnect }: { address: string; onDisconne
                 href={`https://basescan.org/address/${address}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                 onClick={() => setOpen(false)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
               >
                 <ExternalLink className="w-4 h-4" /> View on Basescan
               </a>
@@ -83,22 +89,28 @@ function WalletDropdown({ address, onDisconnect }: { address: string; onDisconne
 }
 
 function ConnectModal({ onClose }: { onClose: () => void }) {
-  const { connect } = useConnect();
+  const { connect, connectors, isPending, error } = useConnect();
 
-  const connectors = [
-    {
-      name: 'Base Smart Wallet',
-      description: 'Gasless & instant — powered by Coinbase',
-      icon: '🔵',
-      connector: coinbaseWallet({ appName: 'Base Arena', preference: 'smartWalletOnly' }),
-    },
-    {
-      name: 'MetaMask',
-      description: 'Browser extension wallet',
-      icon: '🦊',
-      connector: injected({ target: 'metaMask' }),
-    },
-  ];
+  const handleConnect = (connector: (typeof connectors)[0]) => {
+    connect(
+      { connector },
+      {
+        onSuccess: () => {
+          toast.success('Wallet connected!');
+          onClose();
+        },
+        onError: (err) => {
+          if (err.message?.includes('not installed') || err.message?.includes('not found')) {
+            toast.error(`${connector.name} not installed`);
+          } else if (err.message?.includes('rejected') || err.message?.includes('denied')) {
+            toast.error('Connection rejected');
+          } else {
+            toast.error('Connection failed');
+          }
+        },
+      }
+    );
+  };
 
   return (
     <motion.div
@@ -125,21 +137,38 @@ function ConnectModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="space-y-3">
-          {connectors.map((c) => (
-            <button
-              key={c.name}
-              onClick={() => { connect({ connector: c.connector }); onClose(); }}
-              className="w-full flex items-center gap-4 p-4 rounded-2xl border border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group"
-            >
-              <span className="text-2xl">{c.icon}</span>
-              <div className="text-left">
-                <p className="font-semibold text-sm">{c.name}</p>
-                <p className="text-xs text-gray-400">{c.description}</p>
-              </div>
-              <ChevronDown className="w-4 h-4 ml-auto -rotate-90 text-gray-500 group-hover:text-blue-400 transition-colors" />
-            </button>
-          ))}
+          {connectors.map((connector) => {
+            const meta = CONNECTOR_META[connector.name] ?? { icon: '👛', description: connector.name };
+            const isLoading = isPending;
+
+            return (
+              <button
+                key={connector.uid}
+                onClick={() => handleConnect(connector)}
+                disabled={isLoading}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <span className="text-2xl">{meta.icon}</span>
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-sm">{connector.name}</p>
+                  <p className="text-xs text-gray-400">{meta.description}</p>
+                </div>
+                {isLoading ? (
+                  <div className="w-4 h-4 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin ml-auto" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 ml-auto -rotate-90 text-gray-500 group-hover:text-blue-400 transition-colors" />
+                )}
+              </button>
+            );
+          })}
         </div>
+
+        {error && (
+          <div className="mt-4 flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3">
+            <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+            <p className="text-xs text-red-300">{error.message}</p>
+          </div>
+        )}
 
         <p className="text-xs text-center text-gray-500 mt-4">
           By connecting, you agree to the Base Arena Terms of Use
@@ -176,7 +205,6 @@ export function Navbar() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
               <div className="relative w-8 h-8">
                 <div className="absolute inset-0 bg-gradient-blue rounded-lg opacity-80 group-hover:opacity-100 transition-opacity" />
@@ -190,7 +218,6 @@ export function Navbar() {
               </span>
             </Link>
 
-            {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => {
                 const Icon = link.icon;
@@ -213,7 +240,6 @@ export function Navbar() {
               })}
             </div>
 
-            {/* Wallet */}
             <div className="hidden md:flex items-center gap-3">
               {isConnected && address ? (
                 <WalletDropdown address={address} onDisconnect={disconnect} />
@@ -228,7 +254,6 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Mobile menu button */}
             <button
               className="md:hidden p-2 rounded-xl hover:bg-white/5 transition-colors"
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -238,7 +263,6 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Nav */}
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
