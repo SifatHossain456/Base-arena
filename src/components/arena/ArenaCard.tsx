@@ -52,12 +52,15 @@ function PredictionModal({ tournament, onClose }: { tournament: Tournament; onCl
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="prediction-modal-title"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         className="relative glass rounded-3xl p-7 w-full max-w-md shadow-2xl"
       >
-        <h3 className="text-xl font-bold mb-1">{tournament.asset} Arena</h3>
+        <h3 id="prediction-modal-title" className="text-xl font-bold mb-1">{tournament.asset} Arena</h3>
         <p className="text-sm text-gray-400 mb-6">Submit your prediction to enter</p>
 
         <div className="grid grid-cols-2 gap-3 mb-5">

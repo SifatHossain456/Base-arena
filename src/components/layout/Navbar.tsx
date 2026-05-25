@@ -37,6 +37,8 @@ function WalletDropdown({ address, onDisconnect }: { address: string; onDisconne
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
+        aria-haspopup="true"
+        aria-expanded={open}
         className="flex items-center gap-2 glass rounded-xl px-4 py-2 text-sm font-medium hover:border-blue-500/40 transition-all"
       >
         <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
@@ -121,6 +123,9 @@ function ConnectModal({ onClose }: { onClose: () => void }) {
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="connect-modal-title"
         className="relative w-full max-w-sm glass rounded-3xl p-6 shadow-2xl"
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
@@ -128,10 +133,10 @@ function ConnectModal({ onClose }: { onClose: () => void }) {
       >
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-bold">Connect Wallet</h2>
+            <h2 id="connect-modal-title" className="text-xl font-bold">Connect Wallet</h2>
             <p className="text-sm text-gray-400 mt-1">Choose your wallet to enter the Arena</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/5 transition-colors">
+          <button onClick={onClose} aria-label="Close" className="p-2 rounded-xl hover:bg-white/5 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -188,7 +193,7 @@ export function Navbar() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
@@ -226,6 +231,7 @@ export function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
+                    aria-current={active ? 'page' : undefined}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all',
                       active
@@ -257,6 +263,8 @@ export function Navbar() {
             <button
               className="md:hidden p-2 rounded-xl hover:bg-white/5 transition-colors"
               onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileOpen}
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -280,6 +288,7 @@ export function Navbar() {
                       key={link.href}
                       href={link.href}
                       onClick={() => setMobileOpen(false)}
+                      aria-current={active ? 'page' : undefined}
                       className={cn(
                         'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
                         active ? 'bg-blue-600/20 text-blue-400' : 'text-gray-400 hover:text-white hover:bg-white/5'
