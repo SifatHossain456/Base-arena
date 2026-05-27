@@ -54,13 +54,16 @@ export default function CreatePage() {
 
   const handleCreate = async () => {
     if (!isConnected) { toast.error('Connect wallet first'); return; }
-    if (!entryFee || !creatorContrib || !maxParticipants) { toast.error('Fill all fields'); return; }
+    const parsedMax = parseInt(maxParticipants, 10);
+    if (!entryFee || !creatorContrib || !maxParticipants || isNaN(parsedMax) || parsedMax < 2) {
+      toast.error('Fill all fields with valid values'); return;
+    }
     try {
       writeContract({
         address: ARENA_CONTRACT_ADDRESS,
         abi: BASE_ARENA_ABI,
         functionName: 'createTournament',
-        args: [asset, BigInt(duration), parseEther(entryFee), BigInt(parseInt(maxParticipants))],
+        args: [asset, BigInt(duration), parseEther(entryFee), BigInt(parsedMax)],
         value: parseEther(creatorContrib),
       });
       toast.success('Arena created on Base mainnet!');

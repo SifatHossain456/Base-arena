@@ -43,14 +43,14 @@ export function Footer() {
               The ultimate on-chain competitive prediction platform built natively on Base mainnet.
             </p>
             <div className="flex items-center gap-3 mt-6">
-              <a href="#" className="p-2 glass rounded-xl hover:border-blue-500/40 transition-all text-gray-400 hover:text-white">
-                <Twitter className="w-4 h-4" />
+              <a href="#" aria-label="Twitter" className="p-2 glass rounded-xl hover:border-blue-500/40 transition-all text-gray-400 hover:text-white">
+                <Twitter className="w-4 h-4" aria-hidden="true" />
               </a>
-              <a href="https://github.com/SifatHossain456/base-arena" target="_blank" rel="noopener noreferrer" className="p-2 glass rounded-xl hover:border-blue-500/40 transition-all text-gray-400 hover:text-white">
-                <Github className="w-4 h-4" />
+              <a href="https://github.com/SifatHossain456/base-arena" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository" className="p-2 glass rounded-xl hover:border-blue-500/40 transition-all text-gray-400 hover:text-white">
+                <Github className="w-4 h-4" aria-hidden="true" />
               </a>
-              <a href="#" className="p-2 glass rounded-xl hover:border-blue-500/40 transition-all text-gray-400 hover:text-white">
-                <MessageCircle className="w-4 h-4" />
+              <a href="#" aria-label="Discord" className="p-2 glass rounded-xl hover:border-blue-500/40 transition-all text-gray-400 hover:text-white">
+                <MessageCircle className="w-4 h-4" aria-hidden="true" />
               </a>
             </div>
           </div>
