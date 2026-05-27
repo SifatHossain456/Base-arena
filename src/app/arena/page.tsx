@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, Zap, SlidersHorizontal } from 'lucide-react';
 import { ArenaCard } from '@/components/arena/ArenaCard';
@@ -14,7 +14,7 @@ export default function ArenaPage() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [sort, setSort] = useState('Prize Pool');
 
-  const filtered = MOCK_TOURNAMENTS
+  const filtered = useMemo(() => MOCK_TOURNAMENTS
     .filter((t) => {
       const matchSearch = t.asset.toLowerCase().includes(search.toLowerCase());
       if (activeFilter === 'All') return matchSearch;
@@ -28,7 +28,7 @@ export default function ArenaPage() {
       if (sort === 'Time Left') return a.endTime - b.endTime;
       if (sort === 'Participants') return b.participantCount - a.participantCount;
       return 0;
-    });
+    }), [search, activeFilter, sort]);
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
@@ -66,6 +66,7 @@ export default function ArenaPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by asset..."
+              aria-label="Search arenas"
               className="w-full glass rounded-2xl pl-11 pr-4 py-3 text-sm outline-none focus:border-blue-500/50 transition-colors placeholder:text-gray-600"
             />
           </div>
@@ -76,6 +77,7 @@ export default function ArenaPage() {
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
+              aria-label="Sort arenas"
               className="glass rounded-2xl pl-11 pr-8 py-3 text-sm outline-none focus:border-blue-500/50 transition-colors appearance-none bg-transparent cursor-pointer"
             >
               {SORTS.map((s) => <option key={s} value={s} className="bg-[#0D1F38]">{s}</option>)}

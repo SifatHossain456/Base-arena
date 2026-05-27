@@ -158,6 +158,7 @@ export default function CreatePage() {
                     type="number"
                     value={maxParticipants}
                     onChange={(e) => setMaxParticipants(e.target.value)}
+                    aria-label="Max participants"
                     className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 text-sm outline-none focus:border-blue-500/50 transition-colors"
                     min="2"
                     max="1000"
@@ -177,6 +178,7 @@ export default function CreatePage() {
                     type="number"
                     value={entryFee}
                     onChange={(e) => setEntryFee(e.target.value)}
+                    aria-label="Entry fee in ETH"
                     step="0.001"
                     min="0.001"
                     className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 text-sm outline-none focus:border-blue-500/50 transition-colors"
@@ -199,6 +201,7 @@ export default function CreatePage() {
                     type="number"
                     value={creatorContrib}
                     onChange={(e) => setCreatorContrib(e.target.value)}
+                    aria-label="Your prize contribution in ETH"
                     step="0.01"
                     min="0"
                     className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 text-sm outline-none focus:border-blue-500/50 transition-colors"
