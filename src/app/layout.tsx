@@ -20,6 +20,9 @@ export const metadata: Metadata = {
     title: 'Base Arena',
     description: 'Compete. Predict. Win on Base.',
   },
+  other: {
+    'base:app_id': '6a2ad8460cfd412b2ab2bb02',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
